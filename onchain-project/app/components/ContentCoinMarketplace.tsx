@@ -343,19 +343,21 @@ export default function ContentCoinMarketplace() {
       // Fetch recent coins
       const recentResponse = await getCoinsNew({ count: 5 }) as ZoraResponse;
       if (recentResponse.data?.exploreList?.edges) {
-        const recentCoins = recentResponse.data.exploreList.edges.map((edge) => ({
-          id: edge.node.id,
-          name: edge.node.name,
-          symbol: edge.node.symbol || 'N/A',
-          marketCap: edge.node.marketCap || '0',
-          volume24h: edge.node.volume24h || '0',
-          marketCapDelta24h: edge.node.marketCapDelta24h || '0',
-          creatorAddress: edge.node.creatorAddress,
-          contractAddress: edge.node.id.split(':')[1] || edge.node.contractAddress,
-          description: edge.node.description,
-          mediaContent: edge.node.mediaContent,
-          creatorProfile: edge.node.creatorProfile
-        }));
+        const recentCoins = recentResponse.data.exploreList.edges
+          .filter(edge => !edge.node.name.toLowerCase().includes('cum'))
+          .map((edge) => ({
+            id: edge.node.id,
+            name: edge.node.name,
+            symbol: edge.node.symbol || 'N/A',
+            marketCap: edge.node.marketCap || '0',
+            volume24h: edge.node.volume24h || '0',
+            marketCapDelta24h: edge.node.marketCapDelta24h || '0',
+            creatorAddress: edge.node.creatorAddress,
+            contractAddress: edge.node.id.split(':')[1] || edge.node.contractAddress,
+            description: edge.node.description,
+            mediaContent: edge.node.mediaContent,
+            creatorProfile: edge.node.creatorProfile
+          }));
         setDashboard(prev => ({
           ...prev,
           recentCoins: { ...prev.recentCoins, coins: recentCoins, isLoading: false }
@@ -365,9 +367,9 @@ export default function ContentCoinMarketplace() {
       // Fetch top volume coins
       const volumeResponse = await getCoinsTopVolume24h({ count: 5 }) as ZoraResponse;
       if (volumeResponse.data?.exploreList?.edges) {
-        const volumeCoins = volumeResponse.data.exploreList.edges.map((edge) => {
-          console.log('Processing volume coin:', edge.node);
-          return {
+        const volumeCoins = volumeResponse.data.exploreList.edges
+          .filter(edge => !edge.node.name.toLowerCase().includes('cum'))
+          .map((edge) => ({
             id: edge.node.id,
             name: edge.node.name,
             symbol: edge.node.symbol || 'N/A',
@@ -379,9 +381,7 @@ export default function ContentCoinMarketplace() {
             description: edge.node.description,
             mediaContent: edge.node.mediaContent,
             creatorProfile: edge.node.creatorProfile
-          };
-        });
-        console.log('Processed volume coins:', volumeCoins);
+          }));
         setDashboard(prev => ({
           ...prev,
           topVolume: { ...prev.topVolume, coins: volumeCoins, isLoading: false }
@@ -391,9 +391,9 @@ export default function ContentCoinMarketplace() {
       // Fetch top gainers
       const gainersResponse = await getCoinsTopGainers({ count: 5 }) as ZoraResponse;
       if (gainersResponse.data?.exploreList?.edges) {
-        const gainerCoins = gainersResponse.data.exploreList.edges.map((edge) => {
-          console.log('Processing gainer coin:', edge.node);
-          return {
+        const gainerCoins = gainersResponse.data.exploreList.edges
+          .filter(edge => !edge.node.name.toLowerCase().includes('cum'))
+          .map((edge) => ({
             id: edge.node.id,
             name: edge.node.name,
             symbol: edge.node.symbol || 'N/A',
@@ -405,9 +405,7 @@ export default function ContentCoinMarketplace() {
             description: edge.node.description,
             mediaContent: edge.node.mediaContent,
             creatorProfile: edge.node.creatorProfile
-          };
-        });
-        console.log('Processed gainer coins:', gainerCoins);
+          }));
         setDashboard(prev => ({
           ...prev,
           topGainers: { ...prev.topGainers, coins: gainerCoins, isLoading: false }
@@ -417,9 +415,9 @@ export default function ContentCoinMarketplace() {
       // Fetch most valuable coins
       const valuableResponse = await getCoinsMostValuable({ count: 5 }) as ZoraResponse;
       if (valuableResponse.data?.exploreList?.edges) {
-        const valuableCoins = valuableResponse.data.exploreList.edges.map((edge) => {
-          console.log('Processing valuable coin:', edge.node);
-          return {
+        const valuableCoins = valuableResponse.data.exploreList.edges
+          .filter(edge => !edge.node.name.toLowerCase().includes('cum'))
+          .map((edge) => ({
             id: edge.node.id,
             name: edge.node.name,
             symbol: edge.node.symbol || 'N/A',
@@ -431,9 +429,7 @@ export default function ContentCoinMarketplace() {
             description: edge.node.description,
             mediaContent: edge.node.mediaContent,
             creatorProfile: edge.node.creatorProfile
-          };
-        });
-        console.log('Processed valuable coins:', valuableCoins);
+          }));
         setDashboard(prev => ({
           ...prev,
           mostValuable: { ...prev.mostValuable, coins: valuableCoins, isLoading: false }
