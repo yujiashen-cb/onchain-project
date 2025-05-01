@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
-import { getCoinsTopVolume24h, getCoinsTopGainers, getCoinsMostValuable } from '@zoralabs/coins-sdk';
+import { getCoinsTopVolume24h, getCoinsTopGainers, getCoinsMostValuable, tradeCoin } from '@zoralabs/coins-sdk';
+import { Address, createWalletClient, createPublicClient, http, parseEther, Hex } from "viem";
+import { base } from "viem/chains";
+import { useAccount } from 'wagmi';
 
 interface ContentCoin {
   id: string;
@@ -47,6 +50,7 @@ interface DashboardSection {
 const MAX_DESCRIPTION_LENGTH = 100;
 
 export default function ContentCoinMarketplace() {
+  const { address } = useAccount();
   const [dashboard, setDashboard] = useState<{
     topVolume: DashboardSection;
     topGainers: DashboardSection;
@@ -64,6 +68,69 @@ export default function ContentCoinMarketplace() {
       ...prev,
       [coinId]: !prev[coinId]
     }));
+  };
+
+  const publicClient = createPublicClient({
+    chain: base,
+    transport: http("<RPC_URL>"),
+  });
+   
+  const walletClient = createWalletClient({
+    account: address as Hex,
+    chain: base,
+    transport: http("<RPC_URL>"),
+  });
+
+  const handleBuy = async (coin: ContentCoin) => {
+    if (!address) {
+      alert("Please connect your wallet first");
+      return;
+    }
+
+    try {
+      await tradeCoin(
+        {
+          direction: "buy",
+          target: address,
+          args: {
+            recipient: address,
+            orderSize: BigInt("1000000000000000000"), // 1 token in wei
+          }
+        },
+        walletClient,
+        publicClient
+      );
+      alert("Buy successful!");
+    } catch (error) {
+      const err = error as Error;
+      alert("Buy failed: " + err.message);
+    }
+  };
+  
+  const handleSell = async (coin: ContentCoin) => {
+    if (!address) {
+      alert("Please connect your wallet first");
+      return;
+    }
+
+    try {
+      await tradeCoin(
+        {
+          direction: "sell",
+          target: address,
+          args: {
+            recipient: address,
+            orderSize: BigInt("1000000000000000000"), // 1 token in wei
+          }
+        },
+        walletClient,
+        publicClient
+      );
+      alert("Sell successful!");
+    } catch (error) {
+      const err = error as Error;
+      alert("Sell failed: " + err.message);
+    }
   };
 
   useEffect(() => {
@@ -148,7 +215,7 @@ export default function ContentCoinMarketplace() {
         : coin.description;
 
     return (
-      <div key={coin.id} className="border rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow p-6">
+      <div key={coin.id} className="border rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow p-6 flex flex-col h-full">
         <div className="flex justify-between items-center mb-2">
           <h2 className="text-xl font-semibold">{coin.name}</h2>
           <a 
@@ -188,6 +255,20 @@ export default function ContentCoinMarketplace() {
               </span>
             </div>
           )}
+        </div>
+        <div className="flex mt-auto pt-4 gap-2">
+          <button
+            className="bg-green-500 text-white px-4 py-2 rounded-l hover:bg-green-600 flex-1"
+            onClick={() => handleBuy(coin)}
+          >
+            Buy
+          </button>
+          <button
+            className="bg-red-500 text-white px-4 py-2 rounded-r hover:bg-red-600 flex-1"
+            onClick={() => handleSell(coin)}
+          >
+            Sell
+          </button>
         </div>
       </div>
     );
