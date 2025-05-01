@@ -3,6 +3,7 @@ import { getCoinsTopVolume24h, getCoinsTopGainers, getCoinsMostValuable, tradeCo
 import { Address, createWalletClient, createPublicClient, http, parseEther, Hex } from "viem";
 import { baseSepolia } from "viem/chains";
 import { useAccount, useSwitchChain } from 'wagmi';
+import { MediaRenderer, ThirdwebProvider } from "@thirdweb-dev/react";
 
 interface ContentCoin {
   id: string;
@@ -549,8 +550,14 @@ export default function ContentCoinMarketplace() {
     );
   };
 
+  function cleanImageUrl(imageUrl: string | null) {
+    if (!imageUrl) return 'null';
+    return imageUrl.replace('ipfs://', 'https://ipfs.io/ipfs/');
+  }
+
   const renderCoinCard = (coin: ContentCoin) => {
     return (
+      // <ThirdwebProvider>
       <div 
         key={coin.id} 
         className="border rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow p-6 flex flex-col h-full cursor-pointer"
@@ -559,15 +566,17 @@ export default function ContentCoinMarketplace() {
           setIsModalOpen(true);
         }}
       >
-        {coin.mediaContent?.previewImage?.uri && (
+        {coin.mediaContent?.originalUri && (
           <div className="mb-4">
             <img 
-              src={coin.mediaContent.previewImage.uri} 
+              src={
+                cleanImageUrl(coin.mediaContent.originalUri)} 
               alt={coin.name}
               className="w-full h-48 object-cover rounded-lg"
             />
           </div>
         )}
+        {/* {coin.image && <MediaRenderer src={coin.image} alt={coin.name} />} */}
         <div className="flex justify-between items-center mb-4">
           <div>
             <h2 className="text-xl font-semibold">{coin.name}</h2>
@@ -609,12 +618,27 @@ export default function ContentCoinMarketplace() {
             <div className="flex justify-between">
               <span className="text-sm text-gray-500">24h Change</span>
               <span className={`font-bold ${parseFloat(coin.marketCapDelta24h) > 0 ? 'text-green-500' : 'text-red-500'}`}>
-                {Math.round(parseFloat(coin.marketCapDelta24h))}%
+                {Math.round(parseFloat(coin.marketCapDelta24h) * 100) / 100}%
               </span>
             </div>
           )}
         </div>
+        <div className="flex mt-auto pt-4 gap-2">
+          <button
+            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 flex-1"
+            onClick={() => handleBuy(coin)}
+          >
+            Buy
+          </button>
+          <button
+            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 flex-1"
+            onClick={() => handleSell(coin)}
+          >
+            Sell
+          </button>
+        </div>
       </div>
+      // </ThirdwebProvider>
     );
   };
 
