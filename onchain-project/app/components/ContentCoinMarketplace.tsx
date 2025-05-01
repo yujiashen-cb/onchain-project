@@ -72,13 +72,13 @@ export default function ContentCoinMarketplace() {
 
   const publicClient = createPublicClient({
     chain: base,
-    transport: http("<RPC_URL>"),
+    transport: http("https://rpc.zora.energy/"),
   });
    
   const walletClient = createWalletClient({
     account: address as Hex,
     chain: base,
-    transport: http("<RPC_URL>"),
+    transport: http("https://rpc.zora.energy/"),
   });
 
   const handleBuy = async (coin: ContentCoin) => {
@@ -91,10 +91,10 @@ export default function ContentCoinMarketplace() {
       await tradeCoin(
         {
           direction: "buy",
-          target: address,
+          target: coin.creatorAddress as `0x${string}`,
           args: {
             recipient: address,
-            orderSize: BigInt("1000000000000000000"), // 1 token in wei
+            orderSize: BigInt("92988059275"), // 0.0000000000000092988059275 ETH in wei
           }
         },
         walletClient,
@@ -117,10 +117,10 @@ export default function ContentCoinMarketplace() {
       await tradeCoin(
         {
           direction: "sell",
-          target: address,
+          target: coin.creatorAddress as `0x${string}`,
           args: {
             recipient: address,
-            orderSize: BigInt("1000000000000000000"), // 1 token in wei
+            orderSize: BigInt("92988059275"), // 0.0000000000000092988059275 ETH in wei
           }
         },
         walletClient,
