@@ -14,25 +14,30 @@ import {
   Identity,
   EthBalance,
 } from '@coinbase/onchainkit/identity';
-import ArrowSvg from './svg/ArrowSvg';
-import ImageSvg from './svg/Image';
-import OnchainkitSvg from './svg/OnchainKit';
 
-const components = [
+// Mock data for contentcoins - we'll replace this with real data later
+const mockContentCoins = [
   {
-    name: 'Transaction',
-    url: 'https://onchainkit.xyz/transaction/transaction',
+    id: 1,
+    title: "Crypto Art Masterpiece",
+    description: "A unique digital artwork tokenized as a contentcoin",
+    price: "0.1 ETH",
+    image: "https://picsum.photos/200/200",
   },
-  { name: 'Swap', url: 'https://onchainkit.xyz/swap/swap' },
-  { name: 'Checkout', url: 'https://onchainkit.xyz/checkout/checkout' },
-  { name: 'Wallet', url: 'https://onchainkit.xyz/wallet/wallet' },
-  { name: 'Identity', url: 'https://onchainkit.xyz/identity/identity' },
-];
-
-const templates = [
-  { name: 'NFT', url: 'https://github.com/coinbase/onchain-app-template' },
-  { name: 'Commerce', url: 'https://github.com/coinbase/onchain-commerce-template'},
-  { name: 'Fund', url: 'https://github.com/fakepixels/fund-component' },
+  {
+    id: 2,
+    title: "Web3 Tutorial Series",
+    description: "Comprehensive guide to building on blockchain",
+    price: "0.05 ETH",
+    image: "https://picsum.photos/200/201",
+  },
+  {
+    id: 3,
+    title: "NFT Collection Analysis",
+    description: "In-depth analysis of trending NFT collections",
+    price: "0.15 ETH",
+    image: "https://picsum.photos/200/202",
+  },
 ];
 
 export default function App() {
@@ -68,66 +73,30 @@ export default function App() {
         </div>
       </header>
 
-      <main className="flex-grow flex items-center justify-center">
-        <div className="max-w-4xl w-full p-4">
-          <div className="w-1/3 mx-auto mb-6">
-            <ImageSvg />
-          </div>
-          <div className="flex justify-center mb-6">
-            <a target="_blank" rel="_template" href="https://onchainkit.xyz">
-              <OnchainkitSvg className="dark:text-white text-black" />
-            </a>
-          </div>
-          <p className="text-center mb-6">
-            Get started by editing
-            <code className="p-1 ml-1 rounded dark:bg-gray-800 bg-gray-200">app/page.tsx</code>.
-          </p>
-          <div className="flex flex-col items-center">
-            <div className="max-w-2xl w-full">
-              <div className="flex flex-col md:flex-row justify-between mt-4">
-                <div className="md:w-1/2 mb-4 md:mb-0 flex flex-col items-center">
-                  <p className="font-semibold mb-2 text-center">
-                    Explore components
-                  </p>
-                  <ul className="list-disc pl-5 space-y-2 inline-block text-left">
-                    {components.map((component, index) => (
-                      <li key={index}>
-                        <a
-                          href={component.url}
-                          className="hover:underline inline-flex items-center dark:text-white text-black"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          {component.name}
-                          <ArrowSvg />
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                <div className="md:w-1/2 flex flex-col items-center">
-                  <p className="font-semibold mb-2 text-center">
-                    Explore templates
-                  </p>
-                  <ul className="list-disc pl-5 space-y-2 inline-block text-left">
-                    {templates.map((template, index) => (
-                      <li key={index}>
-                        <a
-                          href={template.url}
-                          className="hover:underline inline-flex items-center dark:text-white text-black"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          {template.name}
-                          <ArrowSvg/>
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
+      <main className="flex-grow p-8">
+        <h1 className="text-4xl font-bold text-center mb-8">ContentCoins Marketplace</h1>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {mockContentCoins.map((coin) => (
+            <div key={coin.id} className="border rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+              <img src={coin.image} alt={coin.title} className="w-full h-48 object-cover" />
+              <div className="p-4">
+                <h2 className="text-xl font-semibold mb-2">{coin.title}</h2>
+                <p className="text-gray-600 dark:text-gray-300 mb-4">{coin.description}</p>
+                <div className="flex justify-between items-center">
+                  <span className="text-lg font-bold">{coin.price}</span>
+                  <div className="space-x-2">
+                    <button className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
+                      Buy
+                    </button>
+                    <button className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors">
+                      Sell
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          ))}
         </div>
       </main>
     </div>
