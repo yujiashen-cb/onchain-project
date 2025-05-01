@@ -22,7 +22,7 @@ import ContentCoinMarketplace from './components/ContentCoinMarketplace';
 const config = createConfig({
   chains: [baseSepolia],
   transports: {
-    [baseSepolia.id]: http("https://sepolia.rpc.zora.energy"),
+    [baseSepolia.id]: http("https://sepolia.base.org"),
   },
 });
 

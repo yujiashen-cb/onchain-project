@@ -2,28 +2,28 @@ import { useState, useEffect } from 'react';
 import { getCoinsTopVolume24h, getCoinsTopGainers, getCoinsMostValuable, tradeCoin } from '@zoralabs/coins-sdk';
 import { Address, createWalletClient, createPublicClient, http, parseEther, Hex } from "viem";
 import { baseSepolia } from "viem/chains";
-import { useAccount } from 'wagmi';
+import { useAccount, useSwitchChain } from 'wagmi';
 
 interface ContentCoin {
   id: string;
   name: string;
   symbol: string;
-  description: string;
   marketCap: string;
   volume24h: string;
   marketCapDelta24h: string;
   creatorAddress: string;
+  contractAddress: string;
 }
 
 interface CoinNode {
   id: string;
   name: string;
   symbol: string | null;
-  description: string | null;
   marketCap: string | null;
   volume24h: string | null;
   marketCapDelta24h: string | null;
   creatorAddress: string;
+  contractAddress: string;
 }
 
 interface CoinEdge {
@@ -51,6 +51,7 @@ const MAX_DESCRIPTION_LENGTH = 100;
 
 export default function ContentCoinMarketplace() {
   const { address, chainId } = useAccount();
+  const { switchChain } = useSwitchChain();
   const [dashboard, setDashboard] = useState<{
     topVolume: DashboardSection;
     topGainers: DashboardSection;
@@ -77,20 +78,29 @@ export default function ContentCoinMarketplace() {
     console.log('Network:', chainId === baseSepolia.id ? 'Base Sepolia' : 'Unknown');
     if (chainId) {
       console.log('Network name:', baseSepolia.name);
-      console.log('Network RPC URL:', baseSepolia.rpcUrls.default.http[0]);
+      console.log('Network RPC URL:', "https://sepolia.base.org");
     }
   }, [address, chainId]);
 
-  const publicClient = createPublicClient({
+  const publicClient = address ? createPublicClient({
     chain: baseSepolia,
     transport: http("https://sepolia.base.org"),
-  });
+  }) : null;
    
-  const walletClient = createWalletClient({
+  const walletClient = address ? createWalletClient({
     account: address as Hex,
     chain: baseSepolia,
     transport: http("https://sepolia.base.org"),
-  });
+  }) : null;
+
+  const handleNetworkSwitch = async () => {
+    try {
+      await switchChain({ chainId: baseSepolia.id });
+    } catch (error) {
+      console.error('Failed to switch network:', error);
+      alert('Failed to switch to Base Sepolia network. Please switch manually in your wallet.');
+    }
+  };
 
   const handleBuy = async (coin: ContentCoin) => {
     if (!address) {
@@ -98,33 +108,44 @@ export default function ContentCoinMarketplace() {
       return;
     }
 
+    if (chainId !== baseSepolia.id) {
+      handleNetworkSwitch();
+      return;
+    }
+
+    if (!publicClient || !walletClient) {
+      alert("Wallet client not initialized. Please try reconnecting your wallet.");
+      return;
+    }
+
     try {
-      const balance = await publicClient.getBalance({ address });
-      console.log('Wallet balance:', balance.toString());
-      console.log('Trading with coin:', coin);
-      console.log('Trade parameters:', {
-        direction: "buy",
-        target: coin.creatorAddress,
-        args: {
-          recipient: address,
-          orderSize: BigInt("92988059275"),
-        }
-      });
+      console.log('Checking balance for address:', address);
+      console.log('Current chain ID:', chainId);
+      console.log('Base Sepolia chain ID:', baseSepolia.id);
       
-      const tradeAmount = BigInt("92988059275");
+      const balance = await publicClient.getBalance({ address });
+      console.log('Raw balance in wei:', balance.toString());
+      console.log('Balance in ETH:', Number(balance) / 1e18);
+      
+      const tradeAmount = BigInt("1");
+      console.log('Trade amount in wei:', tradeAmount.toString());
+      console.log('Trade amount in ETH:', Number(tradeAmount) / 1e18);
       
       if (balance < tradeAmount) {
-        alert("Insufficient balance for this trade");
-        return;
+        throw new Error(`Insufficient balance. Current balance: ${Number(balance) / 1e18} ETH, Required: ${Number(tradeAmount) / 1e18} ETH`);
       }
 
+      console.log('Attempting to buy with contract address:', coin.contractAddress);
       const result = await tradeCoin(
         {
           direction: "buy",
-          target: coin.creatorAddress as `0x${string}`,
+          target: coin.contractAddress as `0x${string}`,
           args: {
             recipient: address,
             orderSize: tradeAmount,
+            minAmountOut: BigInt(0),
+            sqrtPriceLimitX96: BigInt(0),
+            tradeReferrer: "0x0000000000000000000000000000000000000000"
           }
         },
         walletClient,
@@ -136,7 +157,7 @@ export default function ContentCoinMarketplace() {
     } catch (error) {
       console.error('Trade error:', error);
       const err = error as Error;
-      alert("Buy failed: " + err.message);
+      alert(err.message);
     }
   };
   
@@ -146,33 +167,44 @@ export default function ContentCoinMarketplace() {
       return;
     }
 
+    if (chainId !== baseSepolia.id) {
+      handleNetworkSwitch();
+      return;
+    }
+
+    if (!publicClient || !walletClient) {
+      alert("Wallet client not initialized. Please try reconnecting your wallet.");
+      return;
+    }
+
     try {
-      const balance = await publicClient.getBalance({ address });
-      console.log('Wallet balance:', balance.toString());
-      console.log('Trading with coin:', coin);
-      console.log('Trade parameters:', {
-        direction: "sell",
-        target: coin.creatorAddress,
-        args: {
-          recipient: address,
-          orderSize: BigInt("92988059275"),
-        }
-      });
+      console.log('Checking balance for address:', address);
+      console.log('Current chain ID:', chainId);
+      console.log('Base Sepolia chain ID:', baseSepolia.id);
       
-      const tradeAmount = BigInt("92988059275");
+      const balance = await publicClient.getBalance({ address });
+      console.log('Raw balance in wei:', balance.toString());
+      console.log('Balance in ETH:', Number(balance) / 1e18);
+      
+      const tradeAmount = BigInt("1");
+      console.log('Trade amount in wei:', tradeAmount.toString());
+      console.log('Trade amount in ETH:', Number(tradeAmount) / 1e18);
       
       if (balance < tradeAmount) {
-        alert("Insufficient balance for this trade");
-        return;
+        throw new Error(`Insufficient balance. Current balance: ${Number(balance) / 1e18} ETH, Required: ${Number(tradeAmount) / 1e18} ETH`);
       }
 
+      console.log('Attempting to sell with contract address:', coin.contractAddress);
       const result = await tradeCoin(
         {
           direction: "sell",
-          target: coin.creatorAddress as `0x${string}`,
+          target: coin.contractAddress as `0x${string}`,
           args: {
             recipient: address,
             orderSize: tradeAmount,
+            minAmountOut: BigInt(0),
+            sqrtPriceLimitX96: BigInt(0),
+            tradeReferrer: "0x0000000000000000000000000000000000000000"
           }
         },
         walletClient,
@@ -184,7 +216,7 @@ export default function ContentCoinMarketplace() {
     } catch (error) {
       console.error('Trade error:', error);
       const err = error as Error;
-      alert("Sell failed: " + err.message);
+      alert(err.message);
     }
   };
 
@@ -198,11 +230,11 @@ export default function ContentCoinMarketplace() {
             id: edge.node.id,
             name: edge.node.name,
             symbol: edge.node.symbol || 'N/A',
-            description: edge.node.description || 'No description available',
             marketCap: edge.node.marketCap || '0',
             volume24h: edge.node.volume24h || '0',
             marketCapDelta24h: edge.node.marketCapDelta24h || '0',
             creatorAddress: edge.node.creatorAddress,
+            contractAddress: edge.node.contractAddress,
           }));
           setDashboard(prev => ({
             ...prev,
@@ -217,11 +249,11 @@ export default function ContentCoinMarketplace() {
             id: edge.node.id,
             name: edge.node.name,
             symbol: edge.node.symbol || 'N/A',
-            description: edge.node.description || 'No description available',
             marketCap: edge.node.marketCap || '0',
             volume24h: edge.node.volume24h || '0',
             marketCapDelta24h: edge.node.marketCapDelta24h || '0',
             creatorAddress: edge.node.creatorAddress,
+            contractAddress: edge.node.contractAddress,
           }));
           setDashboard(prev => ({
             ...prev,
@@ -236,11 +268,11 @@ export default function ContentCoinMarketplace() {
             id: edge.node.id,
             name: edge.node.name,
             symbol: edge.node.symbol || 'N/A',
-            description: edge.node.description || 'No description available',
             marketCap: edge.node.marketCap || '0',
             volume24h: edge.node.volume24h || '0',
             marketCapDelta24h: edge.node.marketCapDelta24h || '0',
             creatorAddress: edge.node.creatorAddress,
+            contractAddress: edge.node.contractAddress,
           }));
           setDashboard(prev => ({
             ...prev,
@@ -261,17 +293,9 @@ export default function ContentCoinMarketplace() {
   }, []);
 
   const renderCoinCard = (coin: ContentCoin) => {
-    const isExpanded = expandedDescriptions[coin.id];
-    const shouldTruncate = coin.description.length > MAX_DESCRIPTION_LENGTH;
-    const displayDescription = isExpanded 
-      ? coin.description 
-      : shouldTruncate 
-        ? `${coin.description.substring(0, MAX_DESCRIPTION_LENGTH)}...` 
-        : coin.description;
-
     return (
       <div key={coin.id} className="border rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow p-6 flex flex-col h-full">
-        <div className="flex justify-between items-center mb-2">
+        <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">{coin.name}</h2>
           <a 
             href={`https://zora.co/coins/${coin.id}`}
@@ -282,17 +306,6 @@ export default function ContentCoinMarketplace() {
             {coin.symbol}
           </a>
         </div>
-        <p className="text-gray-600 dark:text-gray-300 mb-4">
-          {displayDescription}
-          {shouldTruncate && (
-            <button
-              onClick={() => toggleDescription(coin.id)}
-              className="ml-1 text-blue-500 hover:text-blue-700"
-            >
-              {isExpanded ? 'Show less' : 'Read more'}
-            </button>
-          )}
-        </p>
         <div className="space-y-2">
           <div className="flex justify-between">
             <span className="text-sm text-gray-500">Market Cap</span>
@@ -306,7 +319,7 @@ export default function ContentCoinMarketplace() {
             <div className="flex justify-between">
               <span className="text-sm text-gray-500">24h Change</span>
               <span className={`font-bold ${parseFloat(coin.marketCapDelta24h) > 0 ? 'text-green-500' : 'text-red-500'}`}>
-                {coin.marketCapDelta24h}%
+                {Math.round(parseFloat(coin.marketCapDelta24h))}%
               </span>
             </div>
           )}
