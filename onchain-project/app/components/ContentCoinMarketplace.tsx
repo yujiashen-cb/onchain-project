@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getCoinsTopVolume24h, getCoinsTopGainers, getCoinsMostValuable, tradeCoin } from '@zoralabs/coins-sdk';
 import { Address, createWalletClient, createPublicClient, http, parseEther, Hex } from "viem";
-import { base } from "viem/chains";
+import { baseSepolia } from "viem/chains";
 import { useAccount } from 'wagmi';
 
 interface ContentCoin {
@@ -50,7 +50,7 @@ interface DashboardSection {
 const MAX_DESCRIPTION_LENGTH = 100;
 
 export default function ContentCoinMarketplace() {
-  const { address } = useAccount();
+  const { address, chainId } = useAccount();
   const [dashboard, setDashboard] = useState<{
     topVolume: DashboardSection;
     topGainers: DashboardSection;
@@ -70,15 +70,26 @@ export default function ContentCoinMarketplace() {
     }));
   };
 
+  useEffect(() => {
+    console.log('Connected wallet address:', address);
+    console.log('Current chain ID:', chainId);
+    console.log('Base Sepolia chain ID:', baseSepolia.id);
+    console.log('Network:', chainId === baseSepolia.id ? 'Base Sepolia' : 'Unknown');
+    if (chainId) {
+      console.log('Network name:', baseSepolia.name);
+      console.log('Network RPC URL:', baseSepolia.rpcUrls.default.http[0]);
+    }
+  }, [address, chainId]);
+
   const publicClient = createPublicClient({
-    chain: base,
-    transport: http("https://rpc.zora.energy/"),
+    chain: baseSepolia,
+    transport: http("https://sepolia.base.org"),
   });
    
   const walletClient = createWalletClient({
     account: address as Hex,
-    chain: base,
-    transport: http("https://rpc.zora.energy/"),
+    chain: baseSepolia,
+    transport: http("https://sepolia.base.org"),
   });
 
   const handleBuy = async (coin: ContentCoin) => {
@@ -88,20 +99,42 @@ export default function ContentCoinMarketplace() {
     }
 
     try {
-      await tradeCoin(
+      const balance = await publicClient.getBalance({ address });
+      console.log('Wallet balance:', balance.toString());
+      console.log('Trading with coin:', coin);
+      console.log('Trade parameters:', {
+        direction: "buy",
+        target: coin.creatorAddress,
+        args: {
+          recipient: address,
+          orderSize: BigInt("92988059275"),
+        }
+      });
+      
+      const tradeAmount = BigInt("92988059275");
+      
+      if (balance < tradeAmount) {
+        alert("Insufficient balance for this trade");
+        return;
+      }
+
+      const result = await tradeCoin(
         {
           direction: "buy",
           target: coin.creatorAddress as `0x${string}`,
           args: {
             recipient: address,
-            orderSize: BigInt("92988059275"), // 0.0000000000000092988059275 ETH in wei
+            orderSize: tradeAmount,
           }
         },
         walletClient,
         publicClient
       );
+      
+      console.log('Trade result:', result);
       alert("Buy successful!");
     } catch (error) {
+      console.error('Trade error:', error);
       const err = error as Error;
       alert("Buy failed: " + err.message);
     }
@@ -114,20 +147,42 @@ export default function ContentCoinMarketplace() {
     }
 
     try {
-      await tradeCoin(
+      const balance = await publicClient.getBalance({ address });
+      console.log('Wallet balance:', balance.toString());
+      console.log('Trading with coin:', coin);
+      console.log('Trade parameters:', {
+        direction: "sell",
+        target: coin.creatorAddress,
+        args: {
+          recipient: address,
+          orderSize: BigInt("92988059275"),
+        }
+      });
+      
+      const tradeAmount = BigInt("92988059275");
+      
+      if (balance < tradeAmount) {
+        alert("Insufficient balance for this trade");
+        return;
+      }
+
+      const result = await tradeCoin(
         {
           direction: "sell",
           target: coin.creatorAddress as `0x${string}`,
           args: {
             recipient: address,
-            orderSize: BigInt("92988059275"), // 0.0000000000000092988059275 ETH in wei
+            orderSize: tradeAmount,
           }
         },
         walletClient,
         publicClient
       );
+      
+      console.log('Trade result:', result);
       alert("Sell successful!");
     } catch (error) {
+      console.error('Trade error:', error);
       const err = error as Error;
       alert("Sell failed: " + err.message);
     }
